@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>万用排行榜</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #ffd166 0%, #ff9e6d 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .title-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .title-input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-align: center;
+            border: 2px solid #ff9e6d;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #333;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .title-input:focus {
+            outline: none;
+            border-color: #ff7b54;
+            box-shadow: 0 0 0 3px rgba(255, 123, 84, 0.2);
+        }
+        
+        .subtitle {
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.8;
+            font-size: 1.1rem;
+        }
+        
+        .instructions {
+            background: rgba(255, 158, 109, 0.15);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+            font-size: 1rem;
+            line-height: 1.5;
+            border-left: 4px solid #ff9e6d;
+        }
+        
+        .sortable-list {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+        
+        .sortable-item {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            cursor: grab;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-size: 1.1rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            touch-action: none; /* 防止触摸默认行为 */
+        }
+        
+        .sortable-item:hover {
+            background: rgba(255, 255, 255, 0.95);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sortable-item.dragging {
+            opacity: 0.8;
+            transform: rotate(3deg);
+            border: 2px dashed #ff9e6d;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sortable-item.drag-over {
+            border-top: 2px solid #06d6a0;
+        }
+        
+        .rank-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            background: #ff9e6d;
+            color: white;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .item-content {
+            flex-grow: 1;
+        }
+        
+        .drag-icon {
+            margin-left: 10px;
+            opacity: 0.7;
+            font-size: 1.2rem;
+            color: #ff9e6d;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #ff9e6d;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        button:hover {
+            background: #ff7b54;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .reset-btn {
+            background: #ef476f;
+        }
+        
+        .reset-btn:hover {
+            background: #e03e65;
+        }
+        
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(255, 158, 109, 0.1);
+            border-radius: 12px;
+            display: none;
+            border-left: 4px solid #ff9e6d;
+        }
+        
+        .result h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+            color: #333;
+        }
+        
+        .result-list {
+            list-style: none;
+            counter-reset: ranking;
+        }
+        
+        .result-item {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+        }
+        
+        .result-item::before {
+            counter-increment: ranking;
+            content: counter(ranking) ". ";
+            font-weight: bold;
+            margin-right: 10px;
+            width: 25px;
+            height: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #ff9e6d;
+            color: white;
+            border-radius: 50%;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .title-input {
+                font-size: 1.5rem;
+                padding: 10px 15px;
+            }
+            
+            .sortable-item {
+                padding: 12px 15px;
+                font-size: 1rem;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .instructions {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title-section">
+            <input type="text" class="title-input" id="rankTitle" value="万用排行榜" maxlength="20">
+            <p class="subtitle">拖动项目进行排序，按您的重要性或偏好排列</p>
+        </div>
+        
+        <div class="instructions">
+            <p>📝 使用说明：拖动项目到您想要的位置，释放完成排序。（支持触摸屏设备）</p>
+        </div>
+        
+        <ul class="sortable-list" id="sortableList">
+            <li class="sortable-item" data-id="1">
+                <div class="rank-number">1</div>
+                <div class="item-content">马嘉祺</div>
+                <div class="drag-icon">≡</div>
+            </li>
+            <li class="sortable-item" data-id="2">
+                <div class="rank-number">2</div>
+                <div class="item-content">丁程鑫</div>
+                <div class="drag-icon">≡</div>
+            </li>
+            <li class="sortable-item" data-id="3">
+                <div class="rank-number">3</div>
+                <div class="item-content">宋亚轩</div>
+                <div class="drag-icon">≡</div>
+            </li>
+            <li class="sortable-item" data-id="4">
+                <div class="rank-number">4</div>
+                <div class="item-content">刘耀文</div>
+                <div class="drag-icon">≡</div>
+            </li>
+            <li class="sortable-item" data-id="5">
+                <div class="rank-number">5</div>
+                <div class="item-content">张真源</div>
+                <div class="drag-icon">≡</div>
+            </li>
+            <li class="sortable-item" data-id="6">
+                <div class="rank-number">6</div>
+                <div class="item-content">严浩翔</div>
+                <div class="drag-icon">≡</div>
+            </li>
+            <li class="sortable-item" data-id="7">
+                <div class="rank-number">7</div>
+                <div class="item-content">贺峻霖</div>
+                <div class="drag-icon">≡</div>
+            </li>
+        </ul>
+        
+        <div class="actions">
+            <button id="confirmBtn">
+                <span>确认排序</span>
+            </button>
+            <button class="reset-btn" id="resetBtn">
+                <span>重置排序</span>
+            </button>
+        </div>
+        
+        <div class="result" id="result">
+            <h3>您的排序结果：</h3>
+            <ul class="result-list" id="resultList"></ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sortableList = document.getElementById('sortableList');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const result = document.getElementById('result');
+            const resultList = document.getElementById('resultList');
+            const rankTitle = document.getElementById('rankTitle');
+            
+            let draggedItem = null;
+            let startY = 0;
+            let startX = 0;
+            let isDragging = false;
+            
+            // 初始化拖拽事件
+            function initDragAndDrop() {
+                const items = sortableList.querySelectorAll('.sortable-item');
+                
+                items.forEach(item => {
+                    // 鼠标事件
+                    item.addEventListener('mousedown', handleDragStart);
+                    item.addEventListener('dragstart', handleDragStart);
+                    item.addEventListener('dragend', handleDragEnd);
+                    item.addEventListener('dragover', handleDragOver);
+                    item.addEventListener('dragleave', handleDragLeave);
+                    item.addEventListener('drop', handleDrop);
+                    
+                    // 触摸事件
+                    item.addEventListener('touchstart', handleTouchStart, { passive: false });
+                    item.addEventListener('touchmove', handleTouchMove, { passive: false });
+                    item.addEventListener('touchend', handleTouchEnd);
+                });
+            }
+            
+            // 鼠标和触摸开始
+            function handleDragStart(e) {
+                draggedItem = this;
+                setTimeout(() => {
+                    this.classList.add('dragging');
+                }, 0);
+            }
+            
+            function handleTouchStart(e) {
+                e.preventDefault();
+                draggedItem = this;
+                this.classList.add('dragging');
+                isDragging = true;
+                
+                const touch = e.touches[0];
+                startY = touch.clientY;
+                startX = touch.clientX;
+                
+                // 添加触摸反馈
+                this.style.transition = 'none';
+            }
+            
+            // 触摸移动
+            function handleTouchMove(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                
+                const touch = e.touches[0];
+                const deltaY = touch.clientY - startY;
+                
+                // 更新位置
+                if (Math.abs(deltaY) > 10) {
+                    draggedItem.style.transform = `translateY(${deltaY}px)`;
+                    
+                    // 检查是否应该交换位置
+                    const items = [...sortableList.querySelectorAll('.sortable-item:not(.dragging)')];
+                    const nextItem = items.find(item => {
+                        const rect = item.getBoundingClientRect();
+                        return touch.clientY <= rect.top + rect.height / 2;
+                    });
+                    
+                    if (nextItem) {
+                        sortableList.insertBefore(draggedItem, nextItem);
+                        updateRankNumbers();
+                    }
+                }
+            }
+            
+            // 触摸结束
+            function handleTouchEnd(e) {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                draggedItem.classList.remove('dragging');
+                draggedItem.style.transform = '';
+                draggedItem.style.transition = '';
+                draggedItem = null;
+            }
+            
+            // 鼠标事件处理
+            function handleDragEnd() {
+                this.classList.remove('dragging');
+                draggedItem = null;
+            }
+            
+            function handleDragOver(e) {
+                e.preventDefault();
+                this.classList.add('drag-over');
+            }
+            
+            function handleDragLeave() {
+                this.classList.remove('drag-over');
+            }
+            
+            function handleDrop(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+                
+                if (draggedItem !== this) {
+                    const allItems = [...sortableList.querySelectorAll('.sortable-item:not(.dragging)')];
+                    const currentIndex = allItems.indexOf(this);
+                    const draggedIndex = allItems.indexOf(draggedItem);
+                    
+                    if (draggedIndex > currentIndex) {
+                        sortableList.insertBefore(draggedItem, this);
+                    } else {
+                        sortableList.insertBefore(draggedItem, this.nextSibling);
+                    }
+                    
+                    updateRankNumbers();
+                }
+            }
+            
+            // 更新排名数字
+            function updateRankNumbers() {
+                const items = sortableList.querySelectorAll('.sortable-item');
+                items.forEach((item, index) => {
+                    item.querySelector('.rank-number').textContent = index + 1;
+                });
+            }
+            
+            // 确认排序
+            confirmBtn.addEventListener('click', function() {
+                const items = sortableList.querySelectorAll('.sortable-item');
+                resultList.innerHTML = '';
+                
+                items.forEach((item, index) => {
+                    const listItem = document.createElement('li');
+                    listItem.className = 'result-item';
+                    listItem.textContent = item.querySelector('.item-content').textContent;
+                    resultList.appendChild(listItem);
+                });
+                
+                result.style.display = 'block';
+                
+                // 添加成功动画
+                this.innerHTML = '<span>✓ 排序已确认</span>';
+                this.style.background = '#06d6a0';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<span>确认排序</span>';
+                    this.style.background = '#ff9e6d';
+                }, 2000);
+            });
+            
+            // 重置排序
+            resetBtn.addEventListener('click', function() {
+                const items = Array.from(sortableList.querySelectorAll('.sortable-item'));
+                
+                // 按原始ID排序
+                items.sort((a, b) => {
+                    return parseInt(a.getAttribute('data-id')) - parseInt(b.getAttribute('data-id'));
+                });
+                
+                // 清空列表并重新添加
+                sortableList.innerHTML = '';
+                items.forEach(item => {
+                    sortableList.appendChild(item);
+                });
+                
+                updateRankNumbers();
+                result.style.display = 'none';
+                
+                // 添加重置动画
+                this.innerHTML = '<span>↺ 已重置</span>';
+                
+                setTimeout(() => {
+                    this.innerHTML = '<span>重置排序</span>';
+                }, 1500);
+            });
+            
+            // 初始化
+            initDragAndDrop();
+        });
+    </script>
+</body>
+</html>
